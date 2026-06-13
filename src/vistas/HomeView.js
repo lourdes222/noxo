@@ -4,8 +4,8 @@ import { View, Text, StyleSheet } from 'react-native';
 const HomeView = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Inicio</Text>
-      <Text>Bienvenido a la pantalla principal.</Text>
+      <Text style={styles.title}>N O X O</Text>
+      <Text style={styles.subtitle}>Bienvenido a NOXO.</Text>
     </View>
   );
 };
@@ -17,12 +17,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#1E292E',
     padding: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 10,
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#55E6C1',
+    marginBottom: 15,
+    letterSpacing:2,
   },
+  subtitle:{
+    fontSize:16,
+    color:'#FFFFF'
+  }
 });
