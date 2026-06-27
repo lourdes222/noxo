@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-const LoginScreen=()=>{
+export default function LoginScreen(){
     return(
         <View style={styles.container}>
             <View style={styles.tarjeta}>
@@ -10,7 +10,7 @@ const LoginScreen=()=>{
                 </TouchableOpacity>
             </View>
         </View>
-    );
+    )
 };
 const styles= StyleSheet.create({
     container:{
@@ -44,4 +44,3 @@ const styles= StyleSheet.create({
         fontWeight: 'bold'
     }
 });
-export default LoginScreen;

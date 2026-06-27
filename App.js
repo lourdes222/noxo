@@ -4,7 +4,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
+//import { Ionicons } from '@expo/vector-icons'; 
 
 import HomeView from './src/vistas/HomeView';
 import ConfigScreen from './src/vistas/ConfigScreen';
@@ -16,35 +16,21 @@ const Tab = createBottomTabNavigator();
 function MainTabs(){
   return(
     <Tab.Navigator
-    screenOptions={({route})=>({
-      tabBarIcon: ({focused, color, size})=>{
-        let iconName;
-        if (route.name==='Home'){
-          iconName= focused? 'home':'home-outline';
-        }
-        else if(route.name==='LoginTab'){
-          iconName=focused? 'log-in': 'log-in-outline';
-        }
-        else if(route.name==='ProfileTab'){
-          iconName=focused?'person': 'person-outline'
-        }
-        return <Ionicons name={iconName} size={size} color={color}/>;
-      },
-      tabBarActiveTintColor:'#55E6C1',
-      tabBarInactiveTintColor: 'gray',
-      tabBarStyle:{
-        backgroundColor: '#1E292E',
-        borderTopColor: '#3A5A63',
-        heigth: 60,
-        paddingBottom: 8,
-      },
+    screenOptions={{
       headerShown: false,
-    })}>
-      <Tab.Screen name="Home" component={HomeView} options={{title: 'Inicio'}}/>
-      <Tab.SCreen name="LoginTab" component={LoginScreen} options={{title: 'Login'}}/>
-      <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{title: 'Perfil'}}/>
+      tabBarStyle: {backgroundColor: '#1E292E', height: 60},
+      tabBarActiveTintColor: '#55E6C1',
+      tabBarInactiveColor: '#A0A0A0',
+
+      tabBarIcon: ({color, size})=>{
+        let icon="home"
+      }
+      }}>
+      <Tab.Screen name= "Inicio" component={HomeView}/>
+      <Tab.Screen name="Ingresar" component={LoginScreen}/>
+      <Tab.Screen name="Perfil" component={ProfileScreen}/>
     </Tab.Navigator>
-  );
+  )
 }
 
 function ProfileScreen() {
@@ -77,7 +63,7 @@ export default function App() {
           options={{ title: 'Inicio(Tabs)'}}
         />
         <Drawer.Screen
-          name="Setttings"
+          name="Settings"
           component={ConfigScreen}
           options={{ title: 'Configuración'}}
         />
@@ -102,6 +88,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   texto:{
-    color: '#FFFFF'
+    color: '#FFFFFF'
   }
 });
