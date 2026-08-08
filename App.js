@@ -3,8 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, Text } from 'react-native';
-//import { Ionicons } from '@expo/vector-icons'; 
+import { StyleSheet, View, Text, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; 
 
 import HomeView from './src/vistas/HomeView';
 import ConfigScreen from './src/vistas/ConfigScreen';
@@ -16,19 +16,26 @@ const Tab = createBottomTabNavigator();
 function MainTabs(){
   return(
     <Tab.Navigator
-    screenOptions={{
-      headerShown: false,
-      tabBarStyle: {backgroundColor: '#1E292E', height: 60},
-      tabBarActiveTintColor: '#55E6C1',
-      tabBarInactiveColor: '#A0A0A0',
-
-      tabBarIcon: ({color, size})=>{
-        let icon="home"
-      }
-      }}>
-      <Tab.Screen name= "Inicio" component={HomeView}/>
-      <Tab.Screen name="Ingresar" component={LoginScreen}/>
-      <Tab.Screen name="Perfil" component={ProfileScreen}/>
+      screenOptions={({route})=>({
+        headerShown: false,
+        tabBarStyle: {backgroundColor: '#1E292E', height: 60},
+        tabBarActiveTintColor: '#55E6C1',
+        tabBarInactiveTintColor: '#A0A0A0',
+        tabBarIcon: ({focused, color, size})=>{
+          let iconName = 'home-outline';
+          if(route.name === 'Inicio'){
+            iconName = focused ? 'home' : 'home-outline';
+          } else if(route.name === 'Ingresar'){
+            iconName = focused ? 'log-in' : 'log-in-outline';
+          } else if(route.name === 'Perfil'){
+            iconName = focused ? 'person' : 'person-outline';
+          }
+          return (<Ionicons name={iconName} size={size} color={color} />);
+        }
+      })}>
+      <Tab.Screen name="Inicio" component={HomeView} />
+      <Tab.Screen name="Ingresar" component={LoginScreen} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   )
 }
