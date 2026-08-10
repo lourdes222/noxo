@@ -9,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeView from './src/vistas/HomeView';
 import ConfigScreen from './src/vistas/ConfigScreen';
 import LoginScreen from './src/vistas/Inicioses';
+import ProfileScreen from './src/vistas/ProfileScreen';
+import { UserProvider } from './src/vistas/UserContext';
 
 const Drawer = createDrawerNavigator(); 
 const Tab = createBottomTabNavigator();
@@ -27,30 +29,19 @@ function MainTabs(){
             iconName = focused ? 'home' : 'home-outline';
           } else if(route.name === 'Ingresar'){
             iconName = focused ? 'log-in' : 'log-in-outline';
-          } else if(route.name === 'Perfil'){
-            iconName = focused ? 'person' : 'person-outline';
-          }
+          } 
           return (<Ionicons name={iconName} size={size} color={color} />);
         }
       })}>
       <Tab.Screen name="Inicio" component={HomeView} />
       <Tab.Screen name="Ingresar" component={LoginScreen} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   )
 }
 
-function ProfileScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Perfil</Text>
-      <Text>Esta es la pantalla de perfil.</Text>
-    </View>
-  );
-}
-
 export default function App() {
   return (
+    <UserProvider>
     <NavigationContainer>
       <Drawer.Navigator
         screenOptions={{
@@ -67,16 +58,22 @@ export default function App() {
         <Drawer.Screen
           name="Main"
           component={MainTabs}
-          options={{ title: 'Inicio(Tabs)'}}
+          options={{ title: 'Inicio'}}
         />
         <Drawer.Screen
           name="Settings"
           component={ConfigScreen}
           options={{ title: 'Configuración'}}
         />
+        <Drawer.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{title: 'Mi Perfil'}}
+        />
       </Drawer.Navigator>
       <StatusBar style="light" />
     </NavigationContainer>
+    </UserProvider>
   );
 }
 
