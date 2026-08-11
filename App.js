@@ -11,6 +11,8 @@ import ConfigScreen from './src/vistas/ConfigScreen';
 import LoginScreen from './src/vistas/Inicioses';
 import ProfileScreen from './src/vistas/ProfileScreen';
 import { UserProvider } from './src/vistas/UserContext';
+import CrearEnc from './src/vistas/CrearEnc';
+
 
 const Drawer = createDrawerNavigator(); 
 const Tab = createBottomTabNavigator();
@@ -29,12 +31,14 @@ function MainTabs(){
             iconName = focused ? 'home' : 'home-outline';
           } else if(route.name === 'Ingresar'){
             iconName = focused ? 'log-in' : 'log-in-outline';
-          } 
+          } else if (route.name === 'Crear') iconName = 'add-circle-outline';
+
           return (<Ionicons name={iconName} size={size} color={color} />);
         }
       })}>
       <Tab.Screen name="Inicio" component={HomeView} />
       <Tab.Screen name="Ingresar" component={LoginScreen} />
+      <Tab.Screen name="Crear" component={CrearEnc}/>
     </Tab.Navigator>
   )
 }
