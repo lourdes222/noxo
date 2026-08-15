@@ -1,9 +1,12 @@
-import React, {useState} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Alert} from 'react-native';
+import React, {useState, useContext} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
+import {UserContext} from './UserContext';
 
-export default function HomeView(){
+export default function HomeView({navigation}) {
   const [votado, setVotado]= useState(false);
   const [opcionElegida, setOpcionElegida]=useState(null);
+
+  const {userAlias} = useContext(UserContext);
 
   const bancoPreguntas=[
     {
@@ -26,16 +29,42 @@ export default function HomeView(){
 
   const [indicePregunta, setIndicePregunta]= useState(0);
   const preguntaActual= bancoPreguntas[indicePregunta];
+  const [buscandoChat, setBuscandoChat]= useState(false);
+
   const handleVotar= (index)=>{
+    if(!userAlias){
+      Alert.alert(
+        "Debe iniciar sesión", 
+        "Inicia sesión para poder votar y unirte al chat anónimo.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Ingresar", onPress: () => navigation.navigate('Login') }
+        ]
+      );
+      return;
+    }
     setVotado(true);
     setOpcionElegida(index);
-    Alert.alert("¡Voto registrado!", "Tu identidad anónima está a salvo.");
+    setBuscandoChat(true);
+    setTimeout(()=>{
+      setBuscandoChat(false);
+      navigation.navigate('Chat');
+    }, 2000);
   };
-
   const siguientePregunta=()=>{
     setVotado(false);
     setOpcionElegida(null);
     setIndicePregunta((prev)=> (prev+1)% bancoPreguntas.length);
+    
+    if(buscandoChat){
+      return(
+        <View style={styles.pantallaCarga}>
+          <ActivityIndicator size="large" color="#55E6C1" />
+          <Text style={styles.textoCarga}>Buscando chat anónimo...</Text>
+          <Text style={styles.subTextoCarga}>Por favor, espera.</Text>
+        </View>
+      )
+    }
   };
 
   return (
@@ -156,5 +185,25 @@ const styles= StyleSheet.create({
     color: '#55E6C1',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  pantallaCarga:{
+    flex: 1,
+    backgroundColor: '#1E292E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  textoCarga:{
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  subtextoCarga:{
+    color: '#A0AAB2',
+    fontSize: 14,
+    marginTop: 10,
+    textAlign: 'center',
   },
 });

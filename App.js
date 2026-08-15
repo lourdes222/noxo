@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useContext} from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -10,13 +10,16 @@ import HomeView from './src/vistas/HomeView';
 import ConfigScreen from './src/vistas/ConfigScreen';
 import LoginScreen from './src/vistas/Inicioses';
 import ProfileScreen from './src/vistas/ProfileScreen';
-import { UserProvider } from './src/vistas/UserContext';
+import { UserProvider, UserContext } from './src/vistas/UserContext';
 import CrearEnc from './src/vistas/CrearEnc';
-
+import ChatScreen from './src/vistas/ChatScreen';
 
 const Drawer = createDrawerNavigator(); 
 const Tab = createBottomTabNavigator();
-
+function ProfileOrLogin(){
+  const {userAlias} = useContext(UserContext);
+  return userAlias ? <ProfileScreen /> : <LoginScreen />;
+}
 function MainTabs(){
   return(
     <Tab.Navigator
@@ -37,7 +40,6 @@ function MainTabs(){
         }
       })}>
       <Tab.Screen name="Inicio" component={HomeView} />
-      <Tab.Screen name="Ingresar" component={LoginScreen} />
       <Tab.Screen name="Crear" component={CrearEnc}/>
     </Tab.Navigator>
   )
@@ -64,16 +66,23 @@ export default function App() {
           component={MainTabs}
           options={{ title: 'Inicio'}}
         />
+         <Drawer.Screen
+          name="Login"
+          component={ProfileOrLogin}
+          options={{title: 'Mi Perfil'}}
+        />
         <Drawer.Screen
           name="Settings"
           component={ConfigScreen}
           options={{ title: 'Configuración'}}
         />
         <Drawer.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{title: 'Mi Perfil'}}
-        />
+          name="Chat"
+          component={ChatScreen}
+          options={{
+            drawerItemStyle: {display: 'none'}
+          }}/>
+       
       </Drawer.Navigator>
       <StatusBar style="light" />
     </NavigationContainer>
