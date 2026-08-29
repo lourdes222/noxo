@@ -3,35 +3,39 @@ import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator} from
 import {UserContext} from './UserContext';
 
 export default function HomeView({navigation}) {
-  const [votado, setVotado]= useState(false);
-  const [opcionElegida, setOpcionElegida]=useState(null);
+  const [votado, setVotado] = useState(false);
+  const [opcionElegida, setOpcionElegida] = useState(null);
+  const [buscandoChat, setBuscandoChat] = useState(false);
 
   const {userAlias} = useContext(UserContext);
 
-  const bancoPreguntas=[
+  const bancoPreguntas = [
     {
+      id: 1,
       pregunta: "¿Qué preferís para un viernes a la noche?",
       opciones: ["Quedarse en casa viendo series", "Salir de joda con amigos", "Avanzar con estudios"]
     },
     {
+      id: 2,
       pregunta: "¿Cuál es tu mayor superpoder oculto?",
       opciones: ["Memoria de elefante", "Dormir en cualquier lado", "Resolver bugs mágicamente"]
     },
     {
+      id: 3,
       pregunta: "Si pudieras elegir una tecnología para siempre:",
-      opciones: ["Java, toda la vida", "JavaScript/React Native siempre!", "Phyton sin dudarlo"]
+      opciones: ["Java, toda la vida", "JavaScript/React Native siempre!", "Python sin dudarlo"]
     },
     {
+      id: 4,
       pregunta: "¿Cómo manejás los días de fiaca extrema?",
       opciones: ["Música a todo volumen", "Café y a viciar", "No existo por 24 horas"]
     }
   ];
 
-  const [indicePregunta, setIndicePregunta]= useState(0);
-  const preguntaActual= bancoPreguntas[indicePregunta];
-  const [buscandoChat, setBuscandoChat]= useState(false);
+  const [indicePregunta, setIndicePregunta] = useState(0);
+  const preguntaActual = bancoPreguntas[indicePregunta];
 
-  const handleVotar= (index)=>{
+  const handleVotar = async (index) => {
     if(!userAlias){
       Alert.alert(
         "Debe iniciar sesión", 
@@ -43,29 +47,84 @@ export default function HomeView({navigation}) {
       );
       return;
     }
+
     setVotado(true);
     setOpcionElegida(index);
     setBuscandoChat(true);
-    setTimeout(()=>{
+
+    try {
+      setBuscandoChat(true);
+
+      const respuesta = await fetch('http://10.0.9.244:3000/api/votar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: userAlias, 
+          pollId: preguntaActual.id,
+          optionId: index
+        })
+      });
+
+      const datos = await respuesta.json();
+
+      if (datos.match) {
+       
+        setBuscandoChat(false);
+        navigation.navigate('Chat', { roomId: datos.roomId });
+      }else {
+       
+        console.log("Esperando oponente real...");
+        
+        let intentos = 0;
+        const intervalId = setInterval(async () => {
+          intentos++;
+          try {
+            const respVerificar = await fetch(`http://10.0.9.244:3000/api/verificar-sala?profileId=${userAlias}`);
+            const datosVerificar = await respVerificar.json();
+
+            if (datosVerificar.roomFound && datosVerificar.roomId) {
+              clearInterval(intervalId);
+              setBuscandoChat(false);
+              navigation.navigate('Chat', { roomId: datosVerificar.roomId });
+            } else if (intentos >= 10) { 
+              clearInterval(intervalId);
+              setBuscandoChat(false);
+              setVotado(false);       
+              setOpcionElegida(null);
+              Alert.alert(
+                "Sin coincidencia", 
+                "Nadie más votó lo mismo. ¡probá cambiando de pregunta o intentá de nuevo!"
+              );
+            }
+          } catch (e) {
+            console.log("Error verificando sala:", e);
+          }
+        }, 2000); 
+      }
+
+    } catch (error) {
       setBuscandoChat(false);
-      navigation.navigate('Chat');
-    }, 2000);
-  };
-  const siguientePregunta=()=>{
-    setVotado(false);
-    setOpcionElegida(null);
-    setIndicePregunta((prev)=> (prev+1)% bancoPreguntas.length);
-    
-    if(buscandoChat){
-      return(
-        <View style={styles.pantallaCarga}>
-          <ActivityIndicator size="large" color="#55E6C1" />
-          <Text style={styles.textoCarga}>Buscando chat anónimo...</Text>
-          <Text style={styles.subTextoCarga}>Por favor, espera.</Text>
-        </View>
-      )
+      setVotado(false);
+      console.log("Error al votar:", error);
+      Alert.alert("Error", "No se pudo conectar con el servidor.");
     }
   };
+
+  const siguientePregunta = () => {
+    setVotado(false);
+    setOpcionElegida(null);
+    setIndicePregunta((prev) => (prev + 1) % bancoPreguntas.length);
+  };
+
+  if (buscandoChat) {
+    return (
+      <View style={styles.pantallaCarga}>
+        <ActivityIndicator size="large" color="#55E6C1" />
+        <Text style={styles.textoCarga}>Buscando coincidencia anónima...</Text>
+        <Text style={styles.subtextoCarga}>Analizando respuestas de la comunidad.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -74,19 +133,20 @@ export default function HomeView({navigation}) {
       </View>
 
       <Text style={styles.pregunta}>{preguntaActual.pregunta}</Text>
+      
       <View style={styles.opcionesContainer}>
-        {preguntaActual.opciones.map((opcion, index)=>{
-          const esSeleccionada=opcionElegida===index;
+        {preguntaActual.opciones.map((opcion, index) => {
+          const esSeleccionada = opcionElegida === index;
 
           return(
             <TouchableOpacity 
-            key={index}
-            style={[
-              styles.botonOpcion,
-              esSeleccionada && styles.botonSeleccionado
-            ]}
-            onPress={()=> handleVotar(index)}
-            disabled={votado}
+              key={index}
+              style={[
+                styles.botonOpcion,
+                esSeleccionada && styles.botonSeleccionado
+              ]}
+              onPress={() => handleVotar(index)}
+              disabled={votado}
             >
               <Text style={[
                 styles.textoOpcion,
@@ -96,9 +156,10 @@ export default function HomeView({navigation}) {
           );
         })}
       </View>
-      {votado &&(
+
+      {votado && (
         <View style={styles.resultadoContainer}>
-          <Text style={styles.resultadoText}>¡Voto guardado!</Text>
+          <Text style={styles.resultadoText}>¡Voto registrado en el sistema!</Text>
           <TouchableOpacity style={styles.botonSiguiente} onPress={siguientePregunta}>
             <Text style={styles.textoBotonSiguiente}>Siguiente Debate</Text>
           </TouchableOpacity>
@@ -108,7 +169,7 @@ export default function HomeView({navigation}) {
   );
 }
 
-const styles= StyleSheet.create({
+const styles = StyleSheet.create({
   container:{
     flex: 1,
     backgroundColor: '#1E292E',
@@ -121,14 +182,14 @@ const styles= StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 20,
-    marginBottom:30,
+    marginBottom: 30,
     borderWidth: 1,
     borderColor: '#55E6C1',
   },
   topBadgeText:{
     color: '#55E6C1',
     fontWeight: 'bold',
-    fontSize:14,
+    fontSize: 14,
   },
   pregunta:{
     color: '#FFFFFF',

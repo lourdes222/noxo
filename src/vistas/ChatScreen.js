@@ -1,18 +1,21 @@
-import React, {useState, useContext, useEffect} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, FlatList, BackHandler, Alert} from 'react-native';
+import React, {useState, useContext, useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, FlatList, Alert} from 'react-native';
 import {UserContext} from './UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from 'react-native-gesture-handler';
 
-export default function ChatScreen({navigation}) {
-    const {userAlias} = useContext(UserContext);
-    const[tiempoRestante, setTiempoRestante]= useState(900);
-    const[chatActivo, setChatActivo]= useState(true);
+export default function ChatScreen({route, navigation}) {
+    const {userAlias, profileId} = useContext(UserContext);
+    const { roomId } = route.params || {}; 
+    const [tiempoRestante, setTiempoRestante]= useState(900);
+    const [chatActivo, setChatActivo]= useState(true);
+    const [textoInput, setTextoInput]= useState('');
+    const flatListRef = useRef(null);
 
     const [mensajes, setMensajes]= useState([
-        {id: '1', texto: '¡Sala abierta! Debate activado por voto anónimo.', remitente:'Sistema'}
+        {id: '1', texto: '¡Sala abierta! Debate activado por voto anónimo.', remitente:'Sistema'},
     ]);
-    const [textoInput, setTextoInput]= useState('');
+
     useEffect(()=>{
         if(!chatActivo || tiempoRestante <= 0) return;
         const timer=setInterval(()=>{
@@ -27,6 +30,33 @@ export default function ChatScreen({navigation}) {
         }, 1000);
         return ()=> clearInterval(timer);
     }, [tiempoRestante, chatActivo]);
+
+    useEffect(() => {
+        if (!roomId) return;
+
+        const interval = setInterval(async () => {
+            try {
+                const response = await fetch(`http://10.0.9.244:3000/api/mensajes/${roomId}`);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    setMensajes([
+                        { id: '1', texto: '¡Sala abierta! Debate activado por voto anónimo.', remitente: 'Sistema' },
+                        ...data.map(m => ({ 
+                            id: m.id.toString(), 
+                            texto: m.texto, 
+                            remitente: m.remitente,
+                            sender_profile_id: m.sender_profile_id 
+                        }))
+                    ]);
+                }
+            } catch (error) {
+                console.log("Error al obtener mensajes:", error);
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [roomId]);
+
     const mostrarAlertaExtension=()=>{
         Alert.alert("¡Tiempo agotado!", "Desea seguir la conversación?",
             [
@@ -46,81 +76,97 @@ export default function ChatScreen({navigation}) {
             {cancelable:false}
         );
     };
+
     const formatearTiempo=(segundos)=>{
         const mins= Math.floor(segundos/60);
         const secs=segundos%60;
         return `${mins<10?'0':''}${mins}:${secs<10?'0':''}${secs}`;
     };
+
     const salirDelChat=()=>{
         setChatActivo(false);
         navigation.navigate('Main');
     };
-    const enviarMensaje=()=>{
-        if(!textoInput.trim() || !chatActivo) return;
-        const nuevoMensaje={
-            id: Date.now().toString(),
-            texto: textoInput.trim(),
-            remitente: userAlias || 'Anónimo'
-        };
-        setMensajes([...mensajes, nuevoMensaje]);
-        setTextoInput('');
-};
-return(
-    <View style={styles.container}>
-        <View style={styles.headerChat}>
-            <View style={styles.infoTimer}>
-                <Ionicons name="time-outline" size={20} color="#55E6C1" />
-                <Text style={styles.timerText}>
-                    {formatearTiempo(tiempoRestante)}
-                </Text>
+
+   const enviarMensaje = async () => {
+        if (!textoInput.trim() || !chatActivo) return;
+        const salaActual = roomId || 1;
+        const mensajeTexto = textoInput.trim();
+        setTextoInput(''); 
+        try {
+            const response = await fetch('http://10.0.9.244:3000/api/mensajes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomId: salaActual,
+                    senderId: profileId || 1,
+                    message: mensajeTexto
+                })
+            });
+            const resultado = await response.json();
+            console.log("respuesta del servidor al enviar:", resultado);
+        } catch (error) {
+            console.log("error al enviar mensaje:", error);
+        }
+    };
+    return(
+        <View style={styles.container}>
+            <View style={styles.headerChat}>
+                <View style={styles.infoTimer}>
+                    <Ionicons name="time-outline" size={20} color="#55E6C1" />
+                    <Text style={styles.timerText}>
+                        {formatearTiempo(tiempoRestante)}
+                    </Text>
                 </View>
                 <TouchableOpacity style={styles.botonSalir} onPress={salirDelChat}>
                     <Text style={styles.textoBotonSalir}>Salir</Text>
                 </TouchableOpacity>
-        </View>
-        <FlatList
-            data={mensajes}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-                const esSistema = item.remitente === 'Sistema';
-                const esMio = item.remitente === (userAlias || 'Anónimo');
+            </View>
+            <FlatList
+                ref={flatListRef}
+                data={mensajes}
+                keyExtractor={(item) => item.id}
+                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                renderItem={({ item }) => {
+                    const esSistema = item.remitente === 'Sistema';
+                    const esMio = item.sender_profile_id === profileId;
 
-                if (esSistema) {
+                    if (esSistema) {
+                        return (
+                            <View style={styles.sistemaBubble}>
+                                <Text style={styles.sistemaText}>{item.texto}</Text>
+                            </View>
+                        );
+                    }
+
                     return (
-                        <View style={styles.sistemaBubble}>
-                            <Text style={styles.sistemaText}>{item.texto}</Text>
+                        <View style={[styles.bubble, esMio ? styles.mio : styles.otro]}>
+                            {!esMio && <Text style={styles.remitente}>{item.remitente}</Text>}
+                            <Text style={styles.textoMensaje}>{item.texto}</Text>
                         </View>
                     );
-                }
-
-                return (
-                    <View style={[styles.bubble, esMio ? styles.mio : styles.otro]}>
-                        <Text style={styles.remitente}>{item.remitente}</Text>
-                        <Text style={styles.textoMensaje}>{item.texto}</Text>
-                    </View>
-                );
-            }}
-            contentContainerStyle={styles.listaMensajes}
-        />
-        {chatActivo?(
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.textInput}
-                    placeholder="Escribe un mensaje..."
-                    placeholderTextColor="#888"
-                    value={textoInput}
-                    onChangeText={setTextoInput}
-                />
-                <TouchableOpacity style={styles.sendButton} onPress={enviarMensaje}>
-                    <Ionicons name="send" size={20} color="#1E292E"/>
-                </TouchableOpacity>
-            </View>
-        ):(
-        <View style={styles.chatCerradoContainer}>
-            <Text style={styles.chatCerradoText}>El chat ha finalizado.</Text>
+                }}
+                contentContainerStyle={styles.listaMensajes}
+            />
+            {chatActivo ? (
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Escribe un mensaje..."
+                        placeholderTextColor="#888"
+                        value={textoInput}
+                        onChangeText={setTextoInput}
+                    />
+                    <TouchableOpacity style={styles.sendButton} onPress={enviarMensaje}>
+                        <Ionicons name="send" size={18} color="#FFFFFF"/>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <View style={styles.chatCerradoContainer}>
+                    <Text style={styles.chatCerradoText}>El chat ha finalizado.</Text>
+                </View>
+            )}
         </View>
-        )}
-    </View>
     );
 }
 
@@ -164,7 +210,7 @@ const styles = StyleSheet.create({
     },
     sistemaBubble: {
         alignSelf: 'center',
-        backgroundColor: '#1E292E',
+        backgroundColor: '#111827',
         borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: 8,
@@ -188,14 +234,52 @@ const styles = StyleSheet.create({
     },
     otro: {
         alignSelf: 'flex-start',
-        backgroundColor: '#1E292E'
+        backgroundColor: '#2E3F47'
     },
     remitente: {
         color: '#F3F4F6',
         fontWeight: '600',
-        marginBottom: 4
+        marginBottom: 4,
+        fontSize: 12
     },
     textoMensaje: {
         color: '#FFFFFF'
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        backgroundColor: '#111827', 
+        borderTopWidth: 1,
+        borderTopColor: '#2E3F47',
+    },
+    input: {
+        flex: 1,
+        backgroundColor: '#2E3F47',
+        color: '#FFFFFF',
+        borderRadius: 20,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        fontSize: 14,
+        maxHeight: 100,
+    },
+    sendButton: {
+        marginLeft: 10,
+        backgroundColor: '#55E6C1', 
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    chatCerradoContainer: {
+        padding: 15,
+        backgroundColor: '#111827',
+        alignItems: 'center'
+    },
+    chatCerradoText: {
+        color: '#9CA3AF',
+        fontStyle: 'italic'
     }
 });

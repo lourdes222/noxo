@@ -1,35 +1,63 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { UserContext, UserProvider } from './UserContext';
+import { UserContext } from './UserContext';
 
 export default function LoginScreen(){
-    const {setUserAlias}=useContext(UserContext);
-    const [alias, setAlias] = useState('');
+    const { setUserAlias } = useContext(UserContext);
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    useEffect(() => {
-        const aliasRandom = `Noxo_${Math.floor(Math.random() * 9000) + 1000}`;
-        setAlias(aliasRandom);
-    }, []);
-
-    const handleIngresar = () => {
+    const handleIngresar = async () => {
+        if (!email.includes('@')) {
+            Alert.alert("Atención", "Por favor ingresá un correo electrónico válido.");
+            return;
+        }
         if (password.length < 6) {
             Alert.alert("Atención", "La contraseña debe tener al menos 6 caracteres.");
             return;
         }
-        setUserAlias(alias);
-        Alert.alert("¡Bienvenido a NOXO!", `Has ingresado como ${alias} 🕵️‍♂️`);
+
+        const aliasGenerado = `Noxo_${Math.floor(Math.random() * 9000) + 1000}`;
+
+        try {
+            const respuesta = await fetch('http://10.0.9.244:3000/api/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: email,  
+                    password: password, 
+                    alias: aliasGenerado 
+                })
+            });
+
+            const datos = await respuesta.json();
+
+            if (respuesta.ok) {
+                setUserAlias(datos.alias);
+                Alert.alert("¡Bienvenido a NOXO!", `Has ingresado como ${datos.alias} 🕵️‍♂️`);
+            } else {
+                Alert.alert("Error", datos.error || "No se pudo registrar el usuario.");
+            }
+
+        } catch (error) {
+            console.log("Error de conexión:", error);
+            Alert.alert("Error", "No se pudo conectar con el servidor local.");
+        }
     };
 
     return(
         <View style={styles.container}>
             <View style={styles.tarjeta}>
                 <Text style={styles.tituloTarjeta}>Acceso Anónimo</Text>
-                
-                <Text style={styles.labelAlias}>Tu identidad asignada:</Text>
-                <View style={styles.aliasContainer}>
-                    <Text style={styles.aliasText}>{alias}</Text>
-                </View>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Tu correo electrónico"
+                    placeholderTextColor="#A0AAB2"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={setEmail}
+                />
 
                 <TextInput
                     style={styles.input}
@@ -69,27 +97,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 20,
-    },
-    labelAlias: {
-        color: '#55E6C1',
-        marginBottom: 5,
-        fontSize: 14,
-    },
-    aliasContainer: {
-        backgroundColor: '#1E292E',
-        padding: 15,
-        borderRadius: 15,
-        width: '100%',
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#55E6C1',
-        alignItems: 'center',
-    },
-    aliasText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
-        letterSpacing: 1,
     },
     input: {
         width: '100%',
