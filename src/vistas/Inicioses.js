@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'reac
 import { UserContext } from './UserContext';
 
 export default function LoginScreen(){
-    const { setUserAlias } = useContext(UserContext);
+    const { setUserAlias, setProfileId } = useContext(UserContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -20,7 +20,7 @@ export default function LoginScreen(){
         const aliasGenerado = `Noxo_${Math.floor(Math.random() * 9000) + 1000}`;
 
         try {
-            const respuesta = await fetch('http://10.0.9.244:3000/api/usuarios', {
+            const respuesta = await fetch('http://192.168.1.33:3000/api/usuarios', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -34,6 +34,7 @@ export default function LoginScreen(){
 
             if (respuesta.ok) {
                 setUserAlias(datos.alias);
+                setProfileId(datos.profileId);
                 Alert.alert("¡Bienvenido a NOXO!", `Has ingresado como ${datos.alias} 🕵️‍♂️`);
             } else {
                 Alert.alert("Error", datos.error || "No se pudo registrar el usuario.");

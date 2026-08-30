@@ -36,7 +36,7 @@ export default function ChatScreen({route, navigation}) {
 
         const interval = setInterval(async () => {
             try {
-                const response = await fetch(`http://10.0.9.244:3000/api/mensajes/${roomId}`);
+                const response = await fetch(`http://192.168.1.33:3000/api/mensajes/${roomId}`);
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     setMensajes([
@@ -83,8 +83,23 @@ export default function ChatScreen({route, navigation}) {
         return `${mins<10?'0':''}${mins}:${secs<10?'0':''}${secs}`;
     };
 
-    const salirDelChat=()=>{
-        setChatActivo(false);
+   const salirDelChat = async () => {
+        try {
+            if (roomId && profileId) {
+                await fetch('http://192.168.1.33:3000/api/salir-sala', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        profileId: profileId,
+                        roomId: roomId
+                    })
+                });
+            }
+        } catch (error) {
+            console.log("Error al salir de la sala:", error);
+        }
+        setChatActivo(true);
+        setMensajes([{id: '1', texto: '¡Sala abierta! Debate activado por voto anónimo.', remitente:'Sistema'}]);
         navigation.navigate('Main');
     };
 
@@ -94,7 +109,7 @@ export default function ChatScreen({route, navigation}) {
         const mensajeTexto = textoInput.trim();
         setTextoInput(''); 
         try {
-            const response = await fetch('http://10.0.9.244:3000/api/mensajes', {
+            const response = await fetch('http://192.168.1.33:3000/api/mensajes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -141,7 +156,7 @@ export default function ChatScreen({route, navigation}) {
 
                     return (
                         <View style={[styles.bubble, esMio ? styles.mio : styles.otro]}>
-                            {!esMio && <Text style={styles.remitente}>{item.remitente}</Text>}
+                            <Text style={styles.remitente}>{item.remitente}</Text>
                             <Text style={styles.textoMensaje}>{item.texto}</Text>
                         </View>
                     );
@@ -196,7 +211,7 @@ const styles = StyleSheet.create({
         fontWeight: '600'
     },
     botonSalir: {
-        backgroundColor: '#FF6B6B',
+        backgroundColor: '#d34b4b',
         borderRadius: 8,
         paddingHorizontal: 12,
         paddingVertical: 8
@@ -230,7 +245,7 @@ const styles = StyleSheet.create({
     },
     mio: {
         alignSelf: 'flex-end',
-        backgroundColor: '#55E6C1'
+        backgroundColor: '#51ceaf'
     },
     otro: {
         alignSelf: 'flex-start',

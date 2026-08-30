@@ -28,7 +28,9 @@ app.get('/', (req, res) => {
 app.post('/api/votar', (req, res) => {
     const { profileId, pollId, optionId } = req.body;
     console.log("Voto recibido -> profileId:", profileId, "pollId:", pollId, "optionId:", optionId);
-
+    db.query('DELETE FROM room_participants WHERE user_id = ?', [profileId], (errCleanRoom)=>{
+        if(errCleanRoom) console.log("Error al limpiar salas anteriores.", errCleanRoom.message);
+        
     const sqlBorrarViejo = 'DELETE FROM poll_votes WHERE user_id = ? AND poll_id = ?';
     db.query(sqlBorrarViejo, [profileId, pollId], (errDel) => {
         if (errDel) return res.status(500).json({ error: errDel.message });
@@ -65,7 +67,7 @@ app.post('/api/votar', (req, res) => {
             }
         });
     });
-});
+});});
 app.get('/api/verificar-sala', (req, res) => {
     const { profileId } = req.query;
     const sql = `
@@ -98,15 +100,34 @@ app.post('/api/mensajes', (req, res) => {
 });
 app.get('/api/mensajes/:roomId', (req, res) => {
     const { roomId } = req.params;
-    const sql = 'SELECT id, room_id, sender_profile_id, content, created_at FROM messages WHERE room_id = ? ORDER BY created_at ASC';
+    const sql = `
+    SELECT m.id, room_id, m.sender_profile_id, m.content AS texto, m.created_at, c.alias AS remitente
+    FROM messages m
+    LEFT JOIN chat_profiles c ON m.sender_profile_id = c.user_id
+    WHERE room_id = ?
+    ORDER BY m.created_at ASC
+    `;
     db.query(sql, [roomId], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
 });
+app.post('/api/salir-sala', (req, res)=>{
+    const {profileId, roomId}=req.body;
+    const sqlBorrarMensajes = 'DELETE FROM messages WHERE room_id = ?';
+    db.query(sqlBorrarMensajes, [roomId], (errMsj)=>{
+        if(errMsj)console.log("Error al borrar mensajes:", errMsj.message);
+  
+    const sqlBorrarParticipante = 'DELETE FROM room_participants WHERE room_id = ? AND user_id = ?';
+    db.query(sqlBorrarParticipante, [roomId, profileId],(errPart)=>{
+        if(errPart)return res.status(500).json({error: errPart.message});
+        res.json({success: true, message: 'Has salido de la sala.'});
+    });
+  });
+});
 app.post('/api/usuarios', (req, res) => {
     const { email, password, alias } = req.body;
-    const sqlBuscar = 'SELECT u.id, c.alias FROM users u LEFT JOIN chat_profiles c ON u.id = c.user_id WHERE u.email = ?';
+    const sqlBuscar = 'SELECT u.id, c.id AS profileId, c.alias FROM users u LEFT JOIN chat_profiles c ON u.id = c.user_id WHERE u.email = ?';
 
     db.query(sqlBuscar, [email], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -114,7 +135,8 @@ app.post('/api/usuarios', (req, res) => {
             const usuarioExistente = results[0];
             return res.json({ 
                 message: '¡Inicio de sesión exitoso!', 
-                alias: usuarioExistente.alias || `Noxo_${Math.floor(Math.random() * 9000) + 1000}` 
+                alias: usuarioExistente.alias || `Noxo_${Math.floor(Math.random() * 9000) + 1000}`,
+                profileId: usuarioExistente.profileId 
             });
         }
         const sqlUser = 'INSERT INTO users (email, password_hash) VALUES (?,?)';
@@ -124,15 +146,19 @@ app.post('/api/usuarios', (req, res) => {
             const newUserId = result.insertId;
             const sqlProfile = 'INSERT INTO chat_profiles (user_id, alias) VALUES (?,?)';
 
-            db.query(sqlProfile, [newUserId, alias], (errProfile) => {
+            db.query(sqlProfile, [newUserId, alias], (errProfile, profileResult) => { 
                 if (errProfile) return res.status(500).json({ error: errProfile.message });
-                res.json({ message: '¡Usuario registrado con éxito!', alias: alias });
+                
+                res.json({ 
+                    message: '¡Usuario registrado con éxito!', 
+                    alias: alias,
+                    profileId: profileResult.insertId 
+                });
             });
         });
     });
 });
-
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor corriendo en http://10.0.9.244:${PORT}`);
+    console.log(`Servidor corriendo en http://192.168.1.33:${PORT}`);
 });

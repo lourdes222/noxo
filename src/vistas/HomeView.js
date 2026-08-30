@@ -55,7 +55,7 @@ export default function HomeView({navigation}) {
     try {
       setBuscandoChat(true);
 
-      const respuesta = await fetch('http://10.0.9.244:3000/api/votar', {
+      const respuesta = await fetch('http://192.168.1.33:3000/api/votar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,7 +79,7 @@ export default function HomeView({navigation}) {
         const intervalId = setInterval(async () => {
           intentos++;
           try {
-            const respVerificar = await fetch(`http://10.0.9.244:3000/api/verificar-sala?profileId=${userAlias}`);
+            const respVerificar = await fetch(`http://192.168.1.33:3000/api/verificar-sala?profileId=${userAlias}`);
             const datosVerificar = await respVerificar.json();
 
             if (datosVerificar.roomFound && datosVerificar.roomId) {
