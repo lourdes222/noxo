@@ -36,7 +36,7 @@ export default function ChatScreen({route, navigation}) {
 
         const interval = setInterval(async () => {
             try {
-                const response = await fetch(`http://192.168.1.33:3000/api/mensajes/${roomId}`);
+                const response = await fetch(`http://10.0.9.244:3000/api/mensajes/${roomId}`);
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     setMensajes([
@@ -86,7 +86,7 @@ export default function ChatScreen({route, navigation}) {
    const salirDelChat = async () => {
         try {
             if (roomId && profileId) {
-                await fetch('http://192.168.1.33:3000/api/salir-sala', {
+                await fetch('http://10.0.9.244:3000/api/salir-sala', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -109,7 +109,7 @@ export default function ChatScreen({route, navigation}) {
         const mensajeTexto = textoInput.trim();
         setTextoInput(''); 
         try {
-            const response = await fetch('http://192.168.1.33:3000/api/mensajes', {
+            const response = await fetch('http://10.0.9.244:3000/api/mensajes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -125,6 +125,34 @@ app.post('/api/salir-sala', (req, res)=>{
     });
   });
 });
+app.post('/api/polls', (req, res)=>{
+    const {profileId, question, options}=req.body;
+    if(!question || !options || options.length < 2){
+        return res.status(400).json({error: 'Pregunta y al menos dos opciones son requeridas.'});
+    }
+    const sqlPoll = 'INSERT INTO polls (creator_profile_id, question) VALUES (?, ?)';
+    db.query(sqlPoll, [profileId, question], (err, result)=>{
+        if(err)return res.status(500).json({error:err.message});
+        const pollId = result.insertId;
+        const sqlOptions = 'INSERT INTO poll_options (poll_id, option_text) VALUES ?';
+        const optionsData = options.map(opt=>[pollId, opt]);
+        db.query(sqlOptions, [optionsData], (errOpt)=>{
+            if(errOpt)return res.status(500).json({error:errOpt.message});
+            res.json({success: true, message: 'Encuesta creada con éxito.', pollId});
+        });
+    });
+});
+app.get('/api/polls', (req, res)=>{
+    const sql = `SELECT p.id, p.question, c.alias AS creator_alias, p.created_at
+    FROM polls p
+    JOIN chat_profiles c ON p.creator_profile_id = c.user_id
+    ORDER BY p.created_at DESC
+    `;
+    db.query(sql, (err, polls)=>{
+        if(err)return res.status(500).json({error:err.message});
+        res.json(polls);
+    })  
+})
 app.post('/api/usuarios', (req, res) => {
     const { email, password, alias } = req.body;
     const sqlBuscar = 'SELECT u.id, c.id AS profileId, c.alias FROM users u LEFT JOIN chat_profiles c ON u.id = c.user_id WHERE u.email = ?';
@@ -160,5 +188,5 @@ app.post('/api/usuarios', (req, res) => {
 });
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor corriendo en http://192.168.1.33:${PORT}`);
+    console.log(`Servidor corriendo en http://10.0.9.244:${PORT}`);
 });
