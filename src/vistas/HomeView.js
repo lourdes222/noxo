@@ -1,6 +1,11 @@
 import React, {useState, useContext} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
 import {UserContext} from './UserContext';
+import { Platform } from 'react-native';
+
+const API_URL = Platform.OS === 'web' 
+  ? 'http://localhost:3000' 
+  : 'http://192.168.1.36:3000';
 
 export default function HomeView({navigation}) {
   const [votado, setVotado] = useState(false);
@@ -55,7 +60,7 @@ export default function HomeView({navigation}) {
     try {
       setBuscandoChat(true);
 
-      const respuesta = await fetch('http://10.0.9.244:3000/api/votar', {
+      const respuesta = await fetch(`${API_URL}/api/votar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,10 +81,10 @@ export default function HomeView({navigation}) {
         console.log("Esperando oponente real...");
         
         let intentos = 0;
-        const intervalId = setInterval(async () => {
+         const intervalId = setInterval(async () => {
           intentos++;
           try {
-            const respVerificar = await fetch(`http://10.0.9.244:3000/api/verificar-sala?profileId=${userAlias}`);
+            const respVerificar = await fetch(`${API_URL}/api/verificar-sala?profileId=${userAlias}`);
             const datosVerificar = await respVerificar.json();
 
             if (datosVerificar.roomFound && datosVerificar.roomId) {

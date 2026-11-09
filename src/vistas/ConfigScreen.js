@@ -1,21 +1,24 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { UserContext } from './UserContext';
 
 export default function ConfigScreen() {
+  const { userAlias } = useContext(UserContext);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.tituloSeleccion}> Privacidad</Text>
+      <Text style={styles.tituloHeader}>Configuración</Text>
+
+      <Text style={styles.tituloSeleccion}>Privacidad y Cuenta</Text>
       <View style={styles.card}>
-        <Text style={styles.label}> Correo electrónico:</Text>
-        <Text style={styles.valor}> tucorreo@gmail.com</Text>
-        <Text style={styles.label}> Contraseña:</Text>
-        <Text style={styles.valor}> ********</Text>
-      </View>
-      <Text style={styles.tituloSeleccion}> Encuestas hechas</Text>
-      <View style={styles.card}>
-        <Text style={styles.encuesta}> ¿Te gustó la aplicación?</Text>
-        <Text style={styles.encuesta}> ¿Recomendarías la aplicación a otros?</Text>
-        <Text style={styles.encuesta}> ¿Cómo calificarías la atención?</Text>
+        <Text style={styles.label}>Usuario / Alias:</Text>
+        <Text style={styles.valor}>{userAlias ? `@${userAlias}` : 'No ha iniciado sesión'}</Text>
+        
+        <Text style={styles.label}>Correo electrónico:</Text>
+        <Text style={styles.valor}>usuario@noxo.com</Text>
+        
+        <Text style={styles.label}>Contraseña:</Text>
+        <Text style={styles.valor}>********</Text>
       </View>
     </ScrollView>
   );
@@ -29,9 +32,16 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
+  tituloHeader: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginTop: 10,
+  },
   tituloSeleccion: {
     color: '#55E6C1',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 10,
@@ -41,24 +51,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     marginBottom: 10,
-},
+    borderWidth: 1,
+    borderColor: '#2E3F47',
+  },
   label: {
-    color: '#A0A0A0',
-    fontSize: 14,
-    marginBottom: 5,
-},
-valor: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginBottom: 10,
-  fontWeight: '600',
-},
-  encuesta: {
+    color: '#A0AAB2',
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  valor: {
     color: '#FFFFFF',
     fontSize: 15,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2E3F47',
+    marginBottom: 12,
+    fontWeight: '600',
   },
-
-})
+});

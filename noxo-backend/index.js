@@ -126,12 +126,13 @@ app.post('/api/salir-sala', (req, res)=>{
   });
 });
 app.post('/api/polls', (req, res)=>{
-    const {profileId, question, options}=req.body;
+    const { profileId, question, options, category } = req.body;
+    const categoriaFinal = category || 'general';
     if(!question || !options || options.length < 2){
         return res.status(400).json({error: 'Pregunta y al menos dos opciones son requeridas.'});
     }
-    const sqlPoll = 'INSERT INTO polls (creator_profile_id, question) VALUES (?, ?)';
-    db.query(sqlPoll, [profileId, question], (err, result)=>{
+    const sqlPoll = 'INSERT INTO polls (creator_profile_id, question, category) VALUES (?, ?, ?)';
+    db.query(sqlPoll, [profileId, question, categoriaFinal], (err, result)=>{
         if(err)return res.status(500).json({error:err.message});
         const pollId = result.insertId;
         const sqlOptions = 'INSERT INTO poll_options (poll_id, option_text) VALUES ?';
@@ -143,7 +144,7 @@ app.post('/api/polls', (req, res)=>{
     });
 });
 app.get('/api/polls', (req, res)=>{
-    const sql = `SELECT p.id, p.question, c.alias AS creator_alias, p.created_at
+    const sql = `SELECT p.id, p.question, p.category, c.alias AS creator_alias, p.created_at
     FROM polls p
     JOIN chat_profiles c ON p.creator_profile_id = c.user_id
     ORDER BY p.created_at DESC
@@ -152,7 +153,7 @@ app.get('/api/polls', (req, res)=>{
         if(err)return res.status(500).json({error:err.message});
         res.json(polls);
     })  
-})
+});
 app.post('/api/usuarios', (req, res) => {
     const { email, password, alias } = req.body;
     const sqlBuscar = 'SELECT u.id, c.id AS profileId, c.alias FROM users u LEFT JOIN chat_profiles c ON u.id = c.user_id WHERE u.email = ?';
@@ -170,10 +171,8 @@ app.post('/api/usuarios', (req, res) => {
         const sqlUser = 'INSERT INTO users (email, password_hash) VALUES (?,?)';
         db.query(sqlUser, [email, password], (err, result) => {
             if (err) return res.status(500).json({ error: err.message });
-
             const newUserId = result.insertId;
             const sqlProfile = 'INSERT INTO chat_profiles (user_id, alias) VALUES (?,?)';
-
             db.query(sqlProfile, [newUserId, alias], (errProfile, profileResult) => { 
                 if (errProfile) return res.status(500).json({ error: errProfile.message });
                 
@@ -188,5 +187,5 @@ app.post('/api/usuarios', (req, res) => {
 });
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor corriendo en http://10.0.9.244:${PORT}`);
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

@@ -1,7 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { UserContext } from './UserContext';
+import { Platform } from 'react-native';
 
+const API_URL = Platform.OS === 'web' 
+  ? 'http://localhost:3000' 
+  : 'http://192.168.1.36:3000';
+  
 export default function LoginScreen(){
     const { setUserAlias, setProfileId } = useContext(UserContext);
     const [email, setEmail] = useState('');
@@ -20,7 +25,7 @@ export default function LoginScreen(){
         const aliasGenerado = `Noxo_${Math.floor(Math.random() * 9000) + 1000}`;
 
         try {
-            const respuesta = await fetch('http://192.168.1.33:3000/api/usuarios', {
+            const respuesta = await fetch(`${API_URL}/api/usuarios`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

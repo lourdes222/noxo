@@ -10,8 +10,10 @@ import HomeView from './src/vistas/HomeView';
 import ConfigScreen from './src/vistas/ConfigScreen';
 import LoginScreen from './src/vistas/Inicioses';
 import ProfileScreen from './src/vistas/ProfileScreen';
+import MisEncuestasScreen from './src/vistas/MisEncuestasScreen';
 import { UserProvider, UserContext } from './src/vistas/UserContext';
 import CrearEnc from './src/vistas/CrearEnc';
+import FeedScreen from './src/vistas/FeedScreen';
 import ChatScreen from './src/vistas/ChatScreen';
 
 const Drawer = createDrawerNavigator(); 
@@ -71,6 +73,11 @@ export default function App() {
           component={ProfileOrLogin}
           options={{title: 'Mi Perfil'}}
         />
+        <Drawer.Screen
+          name="MisEncuestas"
+          component={MisEncuestasScreen}
+          options={{title: 'Mis Encuestas'}}
+         />
         <Drawer.Screen
           name="Settings"
           component={ConfigScreen}

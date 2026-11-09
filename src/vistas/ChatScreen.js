@@ -3,6 +3,11 @@ import {View, Text, StyleSheet, TouchableOpacity, FlatList, Alert} from 'react-n
 import {UserContext} from './UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput } from 'react-native-gesture-handler';
+import { Platform } from 'react-native';
+
+const API_URL = Platform.OS === 'web' 
+  ? 'http://localhost:3000' 
+  : 'http://192.168.1.36:3000';
 
 export default function ChatScreen({route, navigation}) {
     const {userAlias, profileId} = useContext(UserContext);
@@ -36,7 +41,7 @@ export default function ChatScreen({route, navigation}) {
 
         const interval = setInterval(async () => {
             try {
-                const response = await fetch(`http://10.0.9.244:3000/api/mensajes/${roomId}`);
+                const response = await fetch(`${API_URL}/api/mensajes/${roomId}`);
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     setMensajes([
@@ -86,7 +91,7 @@ export default function ChatScreen({route, navigation}) {
    const salirDelChat = async () => {
         try {
             if (roomId && profileId) {
-                await fetch('http://10.0.9.244:3000/api/salir-sala', {
+                await fetch(`${API_URL}/api/salir-sala`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -109,7 +114,7 @@ export default function ChatScreen({route, navigation}) {
         const mensajeTexto = textoInput.trim();
         setTextoInput(''); 
         try {
-            const response = await fetch('http://10.0.9.244:3000/api/mensajes', {
+            const response = await fetch(`${API_URL}/api/mensajes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
