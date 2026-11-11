@@ -13,6 +13,9 @@ import ProfileScreen from './src/vistas/ProfileScreen';
 import MisEncuestasScreen from './src/vistas/MisEncuestasScreen';
 import { UserProvider, UserContext } from './src/vistas/UserContext';
 import CrearEnc from './src/vistas/CrearEnc';
+import MisLikesScreen from './src/vistas/MisLikesScreen';
+import MisComentariosScreen from './src/vistas/MisComentariosScreen';
+import AyudaScreen from './src/vistas/AyudaScreen';
 import FeedScreen from './src/vistas/FeedScreen';
 import ChatScreen from './src/vistas/ChatScreen';
 
@@ -79,9 +82,24 @@ export default function App() {
           options={{title: 'Mis Encuestas'}}
          />
         <Drawer.Screen
+          name="MisLikes"
+          component={MisLikesScreen}
+          options={{ title: 'Mis Me gusta' }}
+         />
+        <Drawer.Screen
+          name="MisComentarios"
+          component={MisComentariosScreen}
+          options={{ title: 'Mis Comentarios' }}
+        />
+        <Drawer.Screen
           name="Settings"
           component={ConfigScreen}
           options={{ title: 'Configuración'}}
+        />
+        <Drawer.Screen
+          name="Ayuda"
+          component={AyudaScreen}
+          options={{ title: 'Información sobre NOXO' }}
         />
         <Drawer.Screen
           name="Chat"

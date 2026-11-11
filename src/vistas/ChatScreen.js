@@ -11,7 +11,7 @@ const API_URL = Platform.OS === 'web'
 
 export default function ChatScreen({route, navigation}) {
     const {userAlias, profileId} = useContext(UserContext);
-    const { roomId } = route.params || {}; 
+    const roomId = route.params?.roomId || 1;
     const [tiempoRestante, setTiempoRestante]= useState(900);
     const [chatActivo, setChatActivo]= useState(true);
     const [textoInput, setTextoInput]= useState('');

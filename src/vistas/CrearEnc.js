@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, FlatList, ScrollView, Platform, ImageBackground } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { UserContext } from './UserContext';
+import PollInteraction from './PollInteraction'
 
 const API_URL = Platform.OS === 'web' 
   ? 'http://localhost:3000' 
@@ -181,13 +182,18 @@ export default function CrearEnc({ navigation }) {
                             </Text>
                         </View>
                     }
-                    renderItem={({ item }) => (
-                        <View style={styles.pollCard}>
-                            <Text style={styles.preguntaCard}>{item.question}</Text>
-                            <Text style={styles.categoriaCard}>Categoría: {item.category || 'social'}</Text>
-                            <Text style={styles.autorCard}>Creado por: {item.creator_alias}</Text>
-                        </View>
-                    )}
+                 renderItem={({ item }) => (
+                    <View style={styles.pollCard}>
+                    <Text style={styles.preguntaCard}>{item.question}</Text>
+                    <Text style={styles.categoriaCard}>Categoría: {item.category || 'social'}</Text>
+                    <Text style={styles.autorCard}>Creado por: {item.creator_alias}</Text>
+
+                   <PollInteraction 
+                    pollId={item.id} 
+                    profileId={profileId} 
+                   />
+                </View>
+                )}
                     ListEmptyComponent={
                         <Text style={styles.textoVacio}>No hay encuestas publicadas en esta categoría todavía.</Text>
                     }

@@ -12,7 +12,7 @@ export default function HomeView({navigation}) {
   const [opcionElegida, setOpcionElegida] = useState(null);
   const [buscandoChat, setBuscandoChat] = useState(false);
 
-  const {userAlias} = useContext(UserContext);
+  const {userAlias, profileId} = useContext(UserContext);
 
   const bancoPreguntas = [
     {
@@ -64,7 +64,7 @@ export default function HomeView({navigation}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          profileId: userAlias, 
+          profileId: profileId, 
           pollId: preguntaActual.id,
           optionId: index
         })

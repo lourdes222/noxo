@@ -71,17 +71,20 @@ app.post('/api/votar', (req, res) => {
 app.get('/api/verificar-sala', (req, res) => {
     const { profileId } = req.query;
     const sql = `
-        rp.room_id as roomId 
+        SELECT rp.room_id as roomId 
         FROM room_participants rp 
         JOIN rooms r ON rp.room_id = r.id 
         WHERE rp.user_id = ? 
         ORDER BY r.id DESC LIMIT 1
     `;
-    db.query('SELECT room_id FROM room_participants WHERE user_id = ? ORDER BY room_id DESC LIMIT 1', [profileId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
+    db.query(sql, [profileId], (err, results) => {
+        if (err) {
+            console.error("Error en verificar-sala:", err.message);
+            return res.status(500).json({ error: err.message });
+        }
 
         if (results.length > 0) {
-            return res.json({ roomFound: true, roomId: results[0].room_id });
+            return res.json({ roomFound: true, roomId: results[0].roomId });
         } else {
             return res.json({ roomFound: false });
         }
@@ -183,6 +186,94 @@ app.post('/api/usuarios', (req, res) => {
                 });
             });
         });
+    });
+});
+app.get('/api/poll-details/:pollId', (req, res) => {
+    const { pollId } = req.params;
+    const commentsQuery = 'SELECT * FROM poll_comments WHERE poll_id = ? ORDER BY created_at DESC';
+    const likesQuery = 'SELECT COUNT(*) AS totalLikes FROM poll_likes WHERE poll_id = ?';
+
+    db.query(commentsQuery, [pollId], (err, comments) => {
+        if(err) return res.status(500).json({ error: err.message });
+        db.query(likesQuery, [pollId], (err, likeResult) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({
+                comments,
+                totalLikes: likeResult[0] ? likeResult[0].totalLikes : 0
+            });
+        });
+    });
+});
+
+app.post('/api/poll-comments', (req, res) => {
+    const { pollId, profileId, commentText } = req.body;
+    console.log("Comentario recibido -> pollId:", pollId, "profileId:", profileId, "texto:", commentText);
+
+    if (!profileId) {
+        return res.status(400).json({ error: 'Falta el profileId del usuario.' });
+    }
+
+    const query = 'INSERT INTO poll_comments (poll_id, profile_id, comment_text) VALUES (?, ?, ?)';
+    db.query(query, [pollId, profileId, commentText], (err, result) => {
+        if(err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: 'Comentario agregado con éxito' });
+    });
+});
+
+app.post('/api/poll-like', (req, res) => {
+    const { pollId, profileId } = req.body;
+    console.log("Like recibido -> pollId:", pollId, "profileId:", profileId);
+
+    if (!profileId) {
+        return res.status(400).json({ error: 'Falta el profileId del usuario.' });
+    }
+
+    const checkQuery = 'SELECT * FROM poll_likes WHERE poll_id = ? AND profile_id = ?';
+    db.query(checkQuery, [pollId, profileId], (err, results) => {
+        if(err) return res.status(500).json({ error: err.message });
+        if(results.length > 0) {
+            const deleteQuery = 'DELETE FROM poll_likes WHERE poll_id = ? AND profile_id = ?';
+            db.query(deleteQuery, [pollId, profileId], (err) => {
+                if(err) return res.status(500).json({ error: err.message });
+                res.json({ liked: false, message: 'Like removido' });
+            });
+        } else {
+            const insertQuery = 'INSERT INTO poll_likes (poll_id, profile_id) VALUES (?, ?)';
+            db.query(insertQuery, [pollId, profileId], (err) => {
+                if(err) return res.status(500).json({ error: err.message });
+                res.json({ liked: true, message: 'Like agregado' });
+            });
+        }
+    });
+});
+app.get('/api/user-likes/:profileId', (req, res) => {
+    const { profileId } = req.params;
+    const query = `
+        SELECT p.* 
+        FROM poll_likes l 
+        JOIN polls p ON l.poll_id = p.id 
+        WHERE l.profile_id = ?
+    `;
+    db.query(query, [profileId], (err, results) => {
+        if (err) {
+            console.error("Error en /api/user-likes:", err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results);
+    });
+});
+app.get('/api/user-comments-polls/:profileId', (req, res) => {
+    const { profileId } = req.params;
+    const query = `
+        SELECT DISTINCT p.* 
+        FROM poll_comments c 
+        JOIN polls p ON c.poll_id = p.id 
+        WHERE c.profile_id = ?
+        ORDER BY c.created_at DESC
+    `;
+    db.query(query, [profileId], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
     });
 });
 const PORT = 3000;

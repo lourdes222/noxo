@@ -41,6 +41,7 @@ export default function LoginScreen(){
                 setUserAlias(datos.alias);
                 setProfileId(datos.profileId);
                 Alert.alert("¡Bienvenido a NOXO!", `Has ingresado como ${datos.alias} 🕵️‍♂️`);
+                navigation.navigate('Main');
             } else {
                 Alert.alert("Error", datos.error || "No se pudo registrar el usuario.");
             }
