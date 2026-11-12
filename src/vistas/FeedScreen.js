@@ -40,8 +40,6 @@ export default function FeedTematicoScreen() {
 
   return (
     <View style={styles.container}>
-      
-      {/* 1. BARRA SUPERIOR DE CATEGORÍAS (Fija arriba de todo) */}
       <View style={styles.barraContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollBarra}>
           {categorias.map(cat => {
@@ -61,7 +59,6 @@ export default function FeedTematicoScreen() {
         </ScrollView>
       </View>
 
-      {/* 2. LISTA DE ENCUESTAS FILTRADAS */}
       <FlatList
         data={encuestasFiltradas}
         keyExtractor={item => item.id.toString()}
@@ -88,7 +85,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2E3F47',
     backgroundColor: '#161F23',
-    // Esto asegura que la barra quede arriba fija
     width: '100%',
     zIndex: 10,
   },

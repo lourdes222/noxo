@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image } from 'react-native';
 
 export default function PollInteraction({ pollId, profileId }) {
   const [comments, setComments] = useState([]);
@@ -53,6 +53,7 @@ export default function PollInteraction({ pollId, profileId }) {
       console.error("Error al dar like", error);
     }
   };
+
   return (
     <View style={styles.container}>
       <View style={styles.actionRow}>
@@ -87,12 +88,21 @@ export default function PollInteraction({ pollId, profileId }) {
           {comments.length === 0 ? (
             <Text style={styles.textoVacio}>No hay comentarios todavía. ¡Sé el primero!</Text>
           ) : (
-            comments.map((item) => (
-              <View key={item.id.toString()} style={styles.commentItem}>
-                <Text style={styles.commentUser}>Usuario #{item.profile_id}:</Text>
-                <Text style={styles.commentText}>{item.comment_text}</Text>
-              </View>
-            ))
+            comments.map((item) => {
+              const avatarSource = item.avatar_url || `https://robohash.org/User_${item.profile_id}.png?set=set4`;
+              return (
+                <View key={item.id.toString()} style={styles.commentItem}>
+                  <Image 
+                    source={{ uri: avatarSource }} 
+                    style={styles.avatarComentario} 
+                  />
+                  <View style={styles.commentContentContainer}>
+                    <Text style={styles.commentUser}>@{item.alias || `Usuario #${item.profile_id}`}:</Text>
+                    <Text style={styles.commentText}>{item.comment_text}</Text>
+                  </View>
+                </View>
+              );
+            })
           )}
         </View>
       )}
@@ -170,6 +180,8 @@ const styles = StyleSheet.create({
     fontSize: 13 
   },
   commentItem: { 
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#1E292E', 
     padding: 8, 
     borderRadius: 8, 
@@ -177,6 +189,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: '#2E3F47' 
   },
+  avatarComentario: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#25333A',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#55E6C1'
+  },
+  commentContentContainer: { flex: 1 },
   commentUser: { 
     color: '#55E6C1', 
     fontSize: 11, 

@@ -12,6 +12,8 @@ export default function HomeView({navigation}) {
   const [opcionElegida, setOpcionElegida] = useState(null);
   const [buscandoChat, setBuscandoChat] = useState(false);
 
+  const fraseDicho = '"El anonimato es el refugio de las mentes libres." — Comunidad Noxo';
+  
   const {userAlias, profileId} = useContext(UserContext);
 
   const bancoPreguntas = [
@@ -58,8 +60,6 @@ export default function HomeView({navigation}) {
     setBuscandoChat(true);
 
     try {
-      setBuscandoChat(true);
-
       const respuesta = await fetch(`${API_URL}/api/votar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,18 +73,16 @@ export default function HomeView({navigation}) {
       const datos = await respuesta.json();
 
       if (datos.match) {
-       
         setBuscandoChat(false);
         navigation.navigate('Chat', { roomId: datos.roomId });
-      }else {
-       
+      } else {
         console.log("Esperando oponente real...");
         
         let intentos = 0;
-         const intervalId = setInterval(async () => {
+        const intervalId = setInterval(async () => {
           intentos++;
           try {
-            const respVerificar = await fetch(`${API_URL}/api/verificar-sala?profileId=${userAlias}`);
+            const respVerificar = await fetch(`${API_URL}/api/verificar-sala?profileId=${profileId}`);
             const datosVerificar = await respVerificar.json();
 
             if (datosVerificar.roomFound && datosVerificar.roomId) {
@@ -94,11 +92,11 @@ export default function HomeView({navigation}) {
             } else if (intentos >= 10) { 
               clearInterval(intervalId);
               setBuscandoChat(false);
-              setVotado(false);       
+              setVotado(false);      
               setOpcionElegida(null);
               Alert.alert(
                 "Sin coincidencia", 
-                "Nadie más votó lo mismo. ¡probá cambiando de pregunta o intentá de nuevo!"
+                "Nadie más votó lo mismo. ¡Probá cambiando de pregunta o intentá de nuevo!"
               );
             }
           } catch (e) {
@@ -133,6 +131,11 @@ export default function HomeView({navigation}) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.fraseContainer}>
+        <Text style={styles.fraseTitulo}>✨ Lema Comunitario</Text>
+        <Text style={styles.fraseTexto}>{fraseDicho}</Text>
+      </View>
+
       <View style={styles.topBadge}>
         <Text style={styles.topBadgeText}>Debate Anónimo de la Comunidad</Text>
       </View>
@@ -181,6 +184,29 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fraseContainer: {
+    backgroundColor: '#25333A',
+    padding: 12,
+    borderRadius: 15,
+    marginBottom: 20,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#2E3F47',
+    alignItems: 'center',
+  },
+  fraseTitulo: {
+    color: '#55E6C1',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  fraseTexto: {
+    color: '#A0AAB2',
+    fontSize: 13,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   topBadge:{
     backgroundColor: '#25333A',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Platform, Image } from 'react-native';
 
 const API_URL = Platform.OS === 'web' ? 'http://localhost:3000' : 'http://192.168.1.36:3000';
 
@@ -39,12 +39,10 @@ export default function PollDetailScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Botón para volver */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={styles.backButtonText}>← Volver al feed</Text>
       </TouchableOpacity>
 
-      {/* Tarjeta de la encuesta */}
       <View style={styles.pollCard}>
         <Text style={styles.preguntaCard}>{poll.question}</Text>
         <Text style={styles.categoriaCard}>Categoría: {poll.category || 'social'}</Text>
@@ -52,8 +50,6 @@ export default function PollDetailScreen({ route, navigation }) {
       </View>
 
       <Text style={styles.title}>Comentarios</Text>
-
-      {/* Caja para escribir comentario */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -67,16 +63,24 @@ export default function PollDetailScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Lista completa de comentarios */}
       <FlatList
         data={comments}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.commentItem}>
-            <Text style={styles.commentUser}>Usuario #{item.profile_id}:</Text>
-            <Text style={styles.commentText}>{item.comment_text}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const avatarSource = item.avatar_url || `https://robohash.org/User_${item.profile_id}.png?set=set4`;
+          return (
+            <View style={styles.commentItem}>
+              <Image 
+                source={{ uri: avatarSource }} 
+                style={styles.avatarComentario} 
+              />
+              <View style={styles.commentContentContainer}>
+                <Text style={styles.commentUser}>@{item.alias || `Usuario #${item.profile_id}`}:</Text>
+                <Text style={styles.commentText}>{item.comment_text}</Text>
+              </View>
+            </View>
+          );
+        }}
         ListEmptyComponent={
           <Text style={styles.textoVacio}>No hay comentarios todavía. ¡Sé el primero en opinar!</Text>
         }
@@ -98,7 +102,26 @@ const styles = StyleSheet.create({
   input: { flex: 1, backgroundColor: '#2E3F47', color: '#fff', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#3a4f59', fontSize: 14 },
   sendButton: { backgroundColor: '#55E6C1', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
   sendText: { color: '#1E292E', fontWeight: 'bold' },
-  commentItem: { backgroundColor: '#2E3F47', padding: 10, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#3a4f59' },
+  commentItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#2E3F47', 
+    padding: 10, 
+    borderRadius: 8, 
+    marginBottom: 8, 
+    borderWidth: 1, 
+    borderColor: '#3a4f59' 
+  },
+  avatarComentario: { 
+    width: 38, 
+    height: 38, 
+    borderRadius: 19, 
+    backgroundColor: '#1E292E', 
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#55E6C1'
+  },
+  commentContentContainer: { flex: 1 },
   commentUser: { color: '#55E6C1', fontSize: 12, fontWeight: 'bold', marginBottom: 2 },
   commentText: { color: '#fff', fontSize: 14 },
   textoVacio: { color: '#A0AAB2', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }

@@ -219,7 +219,26 @@ app.post('/api/login', (req, res) => {
         });
     });
 });
-
+app.get('/api/profile/:profileId', (req, res) => {
+    const { profileId } = req.params;
+    const sql = 'SELECT id, user_id, alias, avatar_url FROM chat_profiles WHERE id = ?';
+    db.query(sql, [profileId], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ error: 'Perfil no encontrado' });
+        res.json(results[0]);
+    });
+});
+app.post('/api/update-avatar', (req, res) => {
+    const { profileId, avatarUrl } = req.body;
+    if (!profileId || !avatarUrl) {
+        return res.status(400).json({ error: 'Faltan datos requeridos.' });
+    }
+    const sql = 'UPDATE chat_profiles SET avatar_url = ? WHERE id = ?';
+    db.query(sql, [avatarUrl, profileId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, message: '¡Avatar guardado con éxito!' });
+    });
+});
 app.get('/api/poll-details/:pollId', (req, res) => {
     const { pollId } = req.params;
     const commentsQuery = 'SELECT * FROM poll_comments WHERE poll_id = ? ORDER BY created_at DESC';
@@ -302,15 +321,11 @@ app.get('/api/user-comments-polls/:profileId', (req, res) => {
         SELECT DISTINCT p.* 
         FROM poll_comments c 
         JOIN polls p ON c.poll_id = p.id 
-        WHERE c.profile_id = ?
+        WHERE c.profileId = ?
         ORDER BY c.created_at DESC
     `;
-    db.query(query, [profileId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
+    res.json([]);
 });
-
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

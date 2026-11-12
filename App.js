@@ -55,13 +55,17 @@ function MainTabs() {
           if (route.name === 'Inicio') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Crear') {
-            iconName = 'add-circle-outline';
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}>
       <Tab.Screen name="Inicio" component={HomeView} />
-      <Tab.Screen name="Crear" component={CrearEnc} />
+      <Tab.Screen 
+        name="Crear" 
+        component={CrearEnc} 
+        options={{ tabBarLabel: 'Encuestas' }}
+      />
     </Tab.Navigator>
   );
 }
