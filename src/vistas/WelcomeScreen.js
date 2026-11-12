@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Stylesheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function WelcomeScreen({}){
+export default function WelcomeScreen({ navigation }){
     return(
         <View style={styles.container}>
             <View style={styles.tarjeta}>
@@ -15,7 +15,7 @@ export default function WelcomeScreen({}){
                 </TouchableOpacity>
                 <TouchableOpacity
                 style={styles.botonSecundario}
-                onPress={()=>navigation.navigate('Login')}
+                onPress={()=> navigation.navigate('Login')}
                 >
                     <Text style={styles.textoBotonSecundario}>Inicio sesión</Text>
                 </TouchableOpacity>

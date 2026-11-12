@@ -2,12 +2,14 @@ import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { UserContext } from './UserContext';
 import { Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const API_URL = Platform.OS === 'web' 
   ? 'http://localhost:3000' 
   : 'http://192.168.1.36:3000';
   
 export default function LoginScreen(){
+    const navigation = useNavigation();
     const { setUserAlias, setProfileId } = useContext(UserContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,27 +27,21 @@ export default function LoginScreen(){
         const aliasGenerado = `Noxo_${Math.floor(Math.random() * 9000) + 1000}`;
 
         try {
-            const respuesta = await fetch(`${API_URL}/api/usuarios`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    email: email,  
-                    password: password, 
-                    alias: aliasGenerado 
-                })
-            });
-
-            const datos = await respuesta.json();
-
-            if (respuesta.ok) {
-                setUserAlias(datos.alias);
-                setProfileId(datos.profileId);
-                Alert.alert("¡Bienvenido a NOXO!", `Has ingresado como ${datos.alias} 🕵️‍♂️`);
-                navigation.navigate('Main');
-            } else {
-                Alert.alert("Error", datos.error || "No se pudo registrar el usuario.");
-            }
-
+            const respuesta = await fetch(`${API_URL}/api/login`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ 
+             email: email, 
+             password: password 
+            })
+        });
+        const datos = await respuesta.json();
+         if (respuesta.ok) {
+         setUserAlias(datos.alias);
+         setProfileId(datos.profileId);
+        } else {
+        Alert.alert("Error", datos.error || "Credenciales incorrectas.");
+        }
         } catch (error) {
             console.log("Error de conexión:", error);
             Alert.alert("Error", "No se pudo conectar con el servidor local.");
@@ -55,7 +51,7 @@ export default function LoginScreen(){
     return(
         <View style={styles.container}>
             <View style={styles.tarjeta}>
-                <Text style={styles.tituloTarjeta}>Acceso Anónimo</Text>
+                <Text style={styles.tituloTarjeta}>Iniciá Sesión</Text>
                 <TextInput
                     style={styles.input}
                     placeholder="Tu correo electrónico"
@@ -68,7 +64,7 @@ export default function LoginScreen(){
 
                 <TextInput
                     style={styles.input}
-                    placeholder="Elegí tu contraseña"
+                    placeholder="Tu contraseña"
                     placeholderTextColor="#A0AAB2"
                     secureTextEntry={true}
                     value={password}
@@ -77,6 +73,9 @@ export default function LoginScreen(){
 
                 <TouchableOpacity style={styles.boton} onPress={handleIngresar}>
                     <Text style={styles.textoBoton}>Ingresar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={styles.botonVolver}>
+                    <Text style={styles.textoVolver}>← Volver</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -128,5 +127,15 @@ const styles = StyleSheet.create({
         color: '#1E292E',
         fontSize: 18,
         fontWeight: 'bold'
-    }
+    },
+    botonVolver: {
+    marginTop: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    },
+    textoVolver: {
+    color: '#A0AAB2',
+    fontSize: 15,
+    fontWeight: '600',
+    },
 });

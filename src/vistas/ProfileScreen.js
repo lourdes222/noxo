@@ -1,13 +1,19 @@
 import React, { useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { UserContext } from './UserContext';
+import WelcomeScreen from './WelcomeScreen'; 
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
     const { userAlias, setUserAlias } = useContext(UserContext);
 
     const handleLogout = () => {
         setUserAlias(null);
     };
+
+    if (!userAlias) {
+        return <WelcomeScreen navigation={navigation} />;
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Perfil Anónimo</Text>
@@ -17,18 +23,12 @@ export default function ProfileScreen() {
                     <Text style={styles.avatarEmoji}>👤</Text>
                 </View>
 
-                {userAlias ? (
-                    <>
-                        <Text style={styles.aliasText}>@{userAlias}</Text>
-                        <Text style={styles.subText}>Modo Anónimo</Text>
-                        
-                        <TouchableOpacity style={styles.botonLogout} onPress={handleLogout}>
-                            <Text style={styles.textoBotonLogout}>Cerrar Sesión</Text>
-                        </TouchableOpacity>
-                    </>
-                ) : (
-                    <Text style={styles.aliasText}>No has iniciado sesión</Text>
-                )}
+                <Text style={styles.aliasText}>@{userAlias}</Text>
+                <Text style={styles.subText}>Modo Anónimo</Text>
+                
+                <TouchableOpacity style={styles.botonLogout} onPress={handleLogout}>
+                    <Text style={styles.textoBotonLogout}>Cerrar Sesión</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );

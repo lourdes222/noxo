@@ -68,6 +68,7 @@ app.post('/api/votar', (req, res) => {
         });
     });
 });});
+
 app.get('/api/verificar-sala', (req, res) => {
     const { profileId } = req.query;
     const sql = `
@@ -90,6 +91,7 @@ app.get('/api/verificar-sala', (req, res) => {
         }
     });
 });
+
 app.post('/api/mensajes', (req, res) => {
     const { roomId, senderId, message } = req.body;
     const sql = 'INSERT INTO messages (room_id, sender_profile_id, content) VALUES (?, ?, ?)';
@@ -101,6 +103,7 @@ app.post('/api/mensajes', (req, res) => {
         res.json({ success: true, messageId: result.insertId });
     });
 });
+
 app.get('/api/mensajes/:roomId', (req, res) => {
     const { roomId } = req.params;
     const sql = `
@@ -115,6 +118,7 @@ app.get('/api/mensajes/:roomId', (req, res) => {
         res.json(results);
     });
 });
+
 app.post('/api/salir-sala', (req, res)=>{
     const {profileId, roomId}=req.body;
     const sqlBorrarMensajes = 'DELETE FROM messages WHERE room_id = ?';
@@ -128,6 +132,7 @@ app.post('/api/salir-sala', (req, res)=>{
     });
   });
 });
+
 app.post('/api/polls', (req, res)=>{
     const { profileId, question, options, category } = req.body;
     const categoriaFinal = category || 'general';
@@ -146,6 +151,7 @@ app.post('/api/polls', (req, res)=>{
         });
     });
 });
+
 app.get('/api/polls', (req, res)=>{
     const sql = `SELECT p.id, p.question, p.category, c.alias AS creator_alias, p.created_at
     FROM polls p
@@ -157,23 +163,20 @@ app.get('/api/polls', (req, res)=>{
         res.json(polls);
     })  
 });
-app.post('/api/usuarios', (req, res) => {
-    const { email, password, alias } = req.body;
-    const sqlBuscar = 'SELECT u.id, c.id AS profileId, c.alias FROM users u LEFT JOIN chat_profiles c ON u.id = c.user_id WHERE u.email = ?';
 
-    db.query(sqlBuscar, [email], (err, results) => {
+app.post('/api/registro', (req, res) => {
+    const { email, password, alias } = req.body;
+    const sqlVerificar = 'SELECT id FROM users WHERE email = ?';
+
+    db.query(sqlVerificar, [email], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         if (results.length > 0) {
-            const usuarioExistente = results[0];
-            return res.json({ 
-                message: '¡Inicio de sesión exitoso!', 
-                alias: usuarioExistente.alias || `Noxo_${Math.floor(Math.random() * 9000) + 1000}`,
-                profileId: usuarioExistente.profileId 
-            });
+            return res.status(400).json({ error: 'Este correo electrónico ya está registrado.' });
         }
+
         const sqlUser = 'INSERT INTO users (email, password_hash) VALUES (?,?)';
-        db.query(sqlUser, [email, password], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
+        db.query(sqlUser, [email, password], (errUser, result) => {
+            if (errUser) return res.status(500).json({ error: errUser.message });
             const newUserId = result.insertId;
             const sqlProfile = 'INSERT INTO chat_profiles (user_id, alias) VALUES (?,?)';
             db.query(sqlProfile, [newUserId, alias], (errProfile, profileResult) => { 
@@ -188,6 +191,35 @@ app.post('/api/usuarios', (req, res) => {
         });
     });
 });
+
+app.post('/api/login', (req, res) => {
+    const { email, password } = req.body;
+    const sqlLogin = `
+        SELECT u.id, u.password_hash, c.id AS profileId, c.alias 
+        FROM users u 
+        LEFT JOIN chat_profiles c ON u.id = c.user_id 
+        WHERE u.email = ?
+    `;
+
+    db.query(sqlLogin, [email], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'El usuario no está registrado.' });
+        }
+
+        const usuario = results[0];
+        if (usuario.password_hash !== password) {
+            return res.status(401).json({ error: 'Contraseña incorrecta.' });
+        }
+
+        res.json({ 
+            message: '¡Inicio de sesión exitoso!', 
+            alias: usuario.alias || `Noxo_${Math.floor(Math.random() * 9000) + 1000}`,
+            profileId: usuario.profileId 
+        });
+    });
+});
+
 app.get('/api/poll-details/:pollId', (req, res) => {
     const { pollId } = req.params;
     const commentsQuery = 'SELECT * FROM poll_comments WHERE poll_id = ? ORDER BY created_at DESC';
@@ -246,6 +278,7 @@ app.post('/api/poll-like', (req, res) => {
         }
     });
 });
+
 app.get('/api/user-likes/:profileId', (req, res) => {
     const { profileId } = req.params;
     const query = `
@@ -262,6 +295,7 @@ app.get('/api/user-likes/:profileId', (req, res) => {
         res.json(results);
     });
 });
+
 app.get('/api/user-comments-polls/:profileId', (req, res) => {
     const { profileId } = req.params;
     const query = `
@@ -276,6 +310,7 @@ app.get('/api/user-comments-polls/:profileId', (req, res) => {
         res.json(results);
     });
 });
+
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
